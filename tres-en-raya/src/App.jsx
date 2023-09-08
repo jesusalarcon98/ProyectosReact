@@ -1,49 +1,19 @@
 import { useState } from "react";
+import confetti from "canvas-confetti";
+import Square from "./components/Square";
+import { turns } from "./constants";
+import { checkWinner, checkEndGame } from "./logic/board";
+import WinnerModal from "./components/WinnerModal";
 
-const turns = {
-  X: "x",
-  O: "o",
-};
-
-const Square = ({ children, isSelected, updateBoard, index }) => {
-  const className = `square ${isSelected ? "is-selected" : ""}`;
-  const handleClick = () => {
-    updateBoard(index);
-  };
-  return (
-    <div onClick={handleClick} className={className}>
-      {children}
-    </div>
-  );
-};
-
-const WINNER_COMBOS = [
-  [0, 1, 2],
-  [3, 4, 5],
-  [6, 7, 8],
-  [0, 3, 6],
-  [1, 4, 7],
-  [2, 5, 8],
-  [0, 4, 8],
-  [2, 4, 6],
-];
 function App() {
   const [board, setBoard] = useState(Array(9).fill(null));
   const [turn, setTurn] = useState(turns.X);
   const [winner, setWinner] = useState(null);
 
-  const checkWinner = (boardCheck) => {
-    for (const combo of WINNER_COMBOS) {
-      const [a, b, c] = combo;
-      if (
-        boardCheck[a] &&
-        boardCheck[a] === boardCheck[b] &&
-        boardCheck[a] === boardCheck[c]
-      ) {
-        return boardCheck[a];
-      }
-    }
-    return null;
+  const resetGame = () => {
+    setBoard(Array(9).fill(null));
+    setTurn(turns.X);
+    setWinner(null);
   };
 
   const updateBoard = (index) => {
@@ -58,14 +28,17 @@ function App() {
     setTurn(newTurn);
     const newWinner = checkWinner(newBoard);
     if (newWinner) {
-      alert("El ganador es", newWinner);
+      confetti();
       setWinner(newWinner);
+    } else if (checkEndGame(newBoard)) {
+      setWinner(false);
     }
   };
 
   return (
     <main className="board">
       <h1>Tic tac toe</h1>
+      <button onClick={resetGame}>Reset del juego</button>
       <section className="game">
         {board.map((_, index) => {
           return (
@@ -80,6 +53,8 @@ function App() {
         <Square isSelected={turn === turns.X}>{turns.X}</Square>
         <Square isSelected={turn === turns.O}>{turns.O}</Square>
       </section>
+
+      <WinnerModal resetGame={resetGame} winner={winner} />
     </main>
   );
 }
